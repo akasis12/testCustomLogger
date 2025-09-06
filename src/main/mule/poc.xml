@@ -19,7 +19,9 @@ http://www.mulesoft.org/schema/mule/module-hello http://www.mulesoft.org/schema/
 		<http:listener-connection host="0.0.0.0" port="8082" />
 	</http:listener-config>
 	<flow name="pocFlow" doc:id="3289844b-7c1d-495f-960a-a4225349bc29" >
-		<http:listener doc:name="Listener" doc:id="5c05dabe-5c39-4b99-b291-c12d10bb0bce" config-ref="HTTP_Listener_config" path="/poc"/>
+		<http:listener doc:name="Listener" doc:id="5c05dabe-5c39-4b99-b291-c12d10bb0bce" config-ref="HTTP_Listener_config" path="/poc">
+			<redelivery-policy maxRedeliveryCount="2" />
+		</http:listener>
 		<ee:transform doc:name="Transform Message" doc:id="4b75ce65-5c74-430c-9325-8c69685b1c53" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
@@ -33,23 +35,17 @@ output application/java
 		<module-hello:log-message doc:name="Log message" doc:id="515d7855-6244-49f9-90e3-9360a0854a74" config-ref="Hello_Smart_Connector_Config" logLevel="DEBUG"/>
 		<module-hello:do-get doc:name="Do get" doc:id="160ea711-8ae5-464c-9a64-783bf505e597" config-ref="Hello_Smart_Connector_Config" path="/request"/>
 		<logger level="INFO" doc:name="Logger" doc:id="9f9290cd-df12-4bf9-9e47-5c4398becaa2" message="#[payload]"/>
+		<raise-error doc:name="Raise error" doc:id="2ac12544-bc3a-4d27-bb9e-e1344a78d99b" type="ANY"/>
 		<logger level="INFO" doc:name="Logger" doc:id="9ece1439-95b9-4391-bc39-57fd6ee164e5" message="success"/>
 		<error-handler >
 			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="b31111ee-5e21-48e2-aaf7-183e11c7bedc" >
 				<logger level="INFO" doc:name="Logger" doc:id="8543004b-ca08-4872-97fc-fa7a14d30414" message="fail"/>
-				<ee:transform doc:name="Transform Message" doc:id="77bb4d10-586e-43df-995e-e2aefadcafe6" >
+				<ee:transform doc:name="Transform Message" doc:id="ac94518b-e995-4f36-a796-c95c3435e785" >
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
-output application/java
+output application/json
 ---
-{
-	'error.errorType.namespace ++ ":" ++ error.errorType.identifier':error.errorType.namespace ++ ":" ++ error.errorType.identifier,
-	'error.errorType': error.errorType,
-	'error.errorType.parentErrorType.namespace ++ ":" ++ error.errorType.parentErrorType.identifier':error.errorType.parentErrorType.namespace ++ ":" ++ error.errorType.parentErrorType.identifier,
-	'error.errorType.parentErrorType':error.errorType.parentErrorType,
-	'error.errorMessage':error.errorMessage,
-	'error.description':error.description
-}]]></ee:set-payload>
+error.errorType]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
 			</on-error-continue>
